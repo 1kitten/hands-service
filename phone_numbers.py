@@ -1,3 +1,13 @@
+"""
+Phone numbers founder module.
+Opens .txt file named 'urls.txt' with list of
+urls where module should find phone numbers in
+format: 8KKKXXXXXX.
+
+If there is any, numbers will be written
+in 'founded_numbers.txt'
+"""
+
 import re
 import urllib.request
 
