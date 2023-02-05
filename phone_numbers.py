@@ -20,22 +20,26 @@ WEBSITES = {}
 # regex_old = "(8\s?\(?[4-9]\d{0,3}\)?\s?\d{3}-?\d{2}-?\d{2})"
 
 
-def main():
+def find_phone_numbers(url: str) -> None:
+    f = opener.open(url)
+    content = f.read()
+    phone_numbers = list(set(re.findall(rb'(8\s?-?\(?[4-9]\d{0,3}\)?-?\s?-?\d{3}\s?-?\d{2}\s?-?\d{2})', content)))
+    if phone_numbers:
+        filtered_phone_numbers = [
+            i_number.decode() for i_number in phone_numbers if len(
+                i_number.decode().replace('(', '').replace(')', '').replace('-', '').replace(' ', '')
+            ) == 11
+        ]
+        WEBSITES[url.replace('\n', '')] = filtered_phone_numbers
+        FOUNDED_PHONES.update(filtered_phone_numbers)
+
+
+def main() -> None:
     with open('urls.txt', 'r') as urls_fi:
         data = urls_fi.readlines()
 
     for i_url in data:
-        f = opener.open(i_url.replace('\n', ''))
-        content = f.read()
-        phone_numbers = list(set(re.findall(rb'(8\s?-?\(?[4-9]\d{0,3}\)?-?\s?-?\d{3}\s?-?\d{2}\s?-?\d{2})', content)))
-        if phone_numbers:
-            filtered_phone_numbers = [
-                i_number.decode() for i_number in phone_numbers if len(
-                    i_number.decode().replace('(', '').replace(')', '').replace('-', '').replace(' ', '')
-                ) == 11
-            ]
-            WEBSITES[i_url.replace('\n', '')] = filtered_phone_numbers
-            FOUNDED_PHONES.update(filtered_phone_numbers)
+        find_phone_numbers(url=i_url.replace('\n', ''))
 
     with open('founded_numbers.txt', 'w') as fi:
         if FOUNDED_PHONES:
