@@ -9,13 +9,18 @@ in 'founded_numbers.txt'
 """
 
 import json
+import logging
 import re
+import threading
+import time
 import urllib.request
 from typing import List, Optional, Dict, Set
 
 opener: urllib.request.FancyURLopener = urllib.request.FancyURLopener({})
 FOUNDED_PHONES: Set[Optional[str]] = set()
 WEBSITES: Dict[str, List[str]] = {}
+logger: logging.Logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def get_data(file_path: str = 'urls.txt'):
@@ -41,8 +46,18 @@ def find_phone_numbers(url: str) -> None:
 
 
 def main() -> None:
-    for i_url in get_data():
-        find_phone_numbers(url=i_url.replace('\n', ''))
+    start: float = time.time()
+    logger.info('Start founding phone numbers from urls.')
+
+    try:
+        threads: List[threading.Thread] = [threading.Thread(target=find_phone_numbers, args=(i_url.replace('\n', ''),))
+                                           for i_url in get_data()]
+        list(map(lambda x: x.start(), threads))
+    except Exception as e:
+        logger.error(f'An exception: {str(e)} was raised')
+        return
+
+    for thread in threads: thread.join()
 
     with open('founded_numbers.txt', 'w') as fi:
         if FOUNDED_PHONES:
@@ -55,6 +70,8 @@ def main() -> None:
         with open('phone_numbers.json', 'w') as fi:
             json_data = json.dumps(WEBSITES, indent=4)
             fi.write(json_data)
+
+    logger.info('Stop founding phone numbers. Done in {:.4}'.format(time.time() - start))
 
 
 if __name__ == '__main__':
